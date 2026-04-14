@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Viewer – Chopping Board</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script type="module" src="https://cdnjs.cloudflare.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%, #000000 100%);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            margin: 0 0 16px 0;
+            font-weight: 700;
+            font-size: 2rem;
+            flex-shrink: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .model-container {
+            position: relative;
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+            margin-bottom: 12px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            background: linear-gradient(45deg, #000000, #1a1a1a, #000000);
+            max-height: calc(100vh - 150px);
+        }
+
+        model-viewer {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #000000, #1a1a1a, #000000);
+            --poster-color: transparent;
+        }
+
+        /* ── AR button (bottom-right inside viewer) ── */
+        .ar-button {
+            position: absolute !important;
+            bottom: 16px !important;
+            right: 16px !important;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24) !important;
+            border: none !important;
+            padding: 12px 22px !important;
+            border-radius: 25px !important;
+            color: white !important;
+            font-family: 'Poppins', sans-serif !important;
+            font-size: 0.9rem !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.45) !important;
+            text-transform: uppercase !important;
+            letter-spacing: 1px !important;
+            z-index: 1000 !important;
+        }
+
+        .ar-button:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 12px 28px rgba(255, 107, 107, 0.65) !important;
+        }
+
+        /* ── Hint text ── */
+        .ar-controls-text {
+            margin: 4px 0 8px;
+            color: rgba(255, 255, 255, 0.65);
+            font-size: 0.73rem;
+            letter-spacing: 0.3px;
+            text-align: center;
+            width: 100%;
+            line-height: 1.5;
+        }
+
+        /* ── Status toast ── */
+        .status-indicator {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            display: none;
+            z-index: 2000;
+            white-space: nowrap;
+            transition: opacity 0.3s;
+        }
+
+        /* ── Error banner ── */
+        .error-message {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 82, 82, 0.95);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            display: none;
+            z-index: 2000;
+            backdrop-filter: blur(10px);
+            max-width: 90vw;
+            text-align: center;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1rem;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.6rem;
+                margin-bottom: 10px;
+            }
+
+            .model-container {
+                max-height: calc(100vh - 120px);
+                margin-bottom: 8px;
+            }
+
+            .ar-controls-text {
+                font-size: 0.68rem;
+            }
+
+            .ar-button {
+                padding: 10px 16px !important;
+                font-size: 0.82rem !important;
+                bottom: 12px !important;
+                right: 12px !important;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .container {
+                width: 80%;
+                max-width: 1000px;
+            }
+
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            .model-container {
+                max-height: calc(100vh - 120px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Chopping Board</h1>
+
+        <div class="model-container">
+            <!--
+                KEY AR SETTINGS EXPLAINED
+                ─────────────────────────
+                ar-modes="scene-viewer webxr quick-look"
+                  → scene-viewer first: gives native Android drag/rotate/scale gestures
+                  → webxr fallback for browsers
+                  → quick-look fallback for iOS (native ARKit gestures)
+
+                ar-scale="fixed"
+                  → Locks the model to the exact scale set by our JS.
+                    Users CANNOT pinch-to-scale in AR — the product always appears at true size.
+
+                ar-placement="floor"
+                  → Always places on a horizontal floor plane.
+
+                touch-action="none"
+                  → Stops the browser from intercepting any touch gesture so
+                    all gestures (pan/rotate/scale) reach model-viewer and scene-viewer.
+
+                interaction-policy="always-allow"
+                  → No focus-tap required before gestures work.
+
+                disable-pan="false" / enable-pan="true"
+                  → Keeps pan enabled in 3-D preview mode as well.
+            -->
+            <model-viewer id="board-viewer" src="./chopping board 15inch.glb" alt="Chopping Board 15 Inch Model"
+                camera-controls interaction-policy="always-allow" touch-action="none" disable-pan="false"
+                disable-zoom="false" enable-pan="true" auto-rotate auto-rotate-delay="0" rotation-per-second="30deg" ar
+                ar-modes="scene-viewer webxr quick-look" ar-scale="fixed" ar-placement="floor" shadow-intensity="0.35"
+                environment-image="neutral" exposure="0.7" loading="eager" reveal="auto" max-pixel-ratio="2"
+                seamless-poster xr-environment>
+
+                <div class="loading" slot="poster">Loading Chopping Board…</div>
+
+                <!-- AR button lives inside model-viewer so it appears during AR too -->
+                <button slot="ar-button" class="ar-button">View in AR</button>
+
+            </model-viewer>
+        </div>
+
+        <div class="ar-controls-text">
+            👆 One finger – move on floor &nbsp;|&nbsp; 🌀 Two-finger twist – rotate &nbsp;|&nbsp; 🤏 Pinch – scale up /
+            down
+        </div>
+    </div>
+
+    <div class="status-indicator" id="status-indicator"></div>
+    <div class="error-message" id="error-message"></div>
+
+    <script>
+        /* ═══════════════════════════════════════════════════════════
+           CONSTANTS & REFS
+        ═══════════════════════════════════════════════════════════ */
+        const modelViewer = document.getElementById('board-viewer');
+        const statusEl = document.getElementById('status-indicator');
+        const errorEl = document.getElementById('error-message');
+
+        // Real-world height calculation removed — model is natively 15 inches.
+
+        let toastTimer = null;
+
+        /* ═══════════════════════════════════════════════════════════
+           UTILITY: STATUS TOAST
+        ═══════════════════════════════════════════════════════════ */
+        function showStatus(msg, isError = false, durationMs = 3500) {
+            if (toastTimer) clearTimeout(toastTimer);
+            statusEl.textContent = msg;
+            statusEl.style.background = isError
+                ? 'rgba(220,50,50,0.92)'
+                : 'rgba(255,255,255,0.12)';
+            statusEl.style.display = 'block';
+            toastTimer = setTimeout(() => { statusEl.style.display = 'none'; }, durationMs);
+        }
+
+        function showError(msg, durationMs = 5000) {
+            errorEl.textContent = msg;
+            errorEl.style.display = 'block';
+            setTimeout(() => { errorEl.style.display = 'none'; }, durationMs);
+        }
+
+        /* ═══════════════════════════════════════════════════════════
+           MODEL LOAD
+           The model is natively sized, so no custom scaling is needed.
+           ar-scale="fixed" (if set) would lock this scale in AR.
+        ═══════════════════════════════════════════════════════════ */
+        modelViewer.addEventListener('load', () => {
+            console.log('✓ Chopping Board model loaded');
+
+            try {
+                // Ensure the camera target is centered on the model
+                modelViewer.cameraTarget = 'auto auto auto';
+
+                // Use auto-framing to fit the model perfectly in the container
+                requestAnimationFrame(() => {
+                    modelViewer.updateFraming();
+                    // Set orbit to auto so it calculates the best distance to fit the view
+                    modelViewer.cameraOrbit = '0deg 75deg auto';
+                });
+            } catch (e) {
+                console.warn('Error adjusting camera:', e);
+            }
+
+            showStatus('✓ Chopping Board ready – tap "View in AR"');
+        });
+
+        modelViewer.addEventListener('error', (e) => {
+            console.error('Model error:', e);
+            showStatus('Failed to load model', true);
+            const poster = modelViewer.querySelector('.loading');
+            if (poster) { poster.textContent = '⚠ Failed to load model'; poster.style.color = '#ff6b6b'; }
+        });
+
+        /* ═══════════════════════════════════════════════════════════
+           AR STATUS EVENTS
+           scene-viewer handles all gestures natively on Android.
+           quick-look handles all gestures natively on iOS.
+           webxr fallback fires these events.
+        ═══════════════════════════════════════════════════════════ */
+        modelViewer.addEventListener('ar-status', ({ detail: { status } }) => {
+            console.log('AR status:', status);
+
+            switch (status) {
+                case 'session-started':
+                    showStatus('🔍 Scanning for floor… move camera slowly', false, 10000);
+                    break;
+
+                case 'object-placed':
+                    showStatus('✅ Tap placed! Drag • Twist to rotate • Pinch to scale', false, 5000);
+                    break;
+
+                case 'failed':
+                    showStatus('❌ AR failed – check camera permission & lighting', true, 6000);
+                    showError('AR could not start. Ensure camera access is allowed and try in good lighting.');
+                    break;
+
+                case 'not-presenting':
+                    showStatus('AR session ended');
+                    break;
+            }
+        });
+
+        /* ═══════════════════════════════════════════════════════════
+           AR TRACK – log hit-test results (debug, harmless in prod)
+        ═══════════════════════════════════════════════════════════ */
+        modelViewer.addEventListener('ar-tracking', ({ detail: { state } }) => {
+            if (state === 'tracking-normal') {
+                console.log('AR tracking normal');
+            }
+        });
+
+        /* ═══════════════════════════════════════════════════════════
+           PREVENT CONTEXT MENU (better mobile UX)
+        ═══════════════════════════════════════════════════════════ */
+        modelViewer.addEventListener('contextmenu', e => e.preventDefault());
+
+        /* ═══════════════════════════════════════════════════════════
+           VISIBILITY CHANGE – clean up if user tabs away mid-AR
+        ═══════════════════════════════════════════════════════════ */
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (toastTimer) clearTimeout(toastTimer);
+                statusEl.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+
+</html>
