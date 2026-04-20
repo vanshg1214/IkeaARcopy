@@ -145,7 +145,7 @@ function Model({ url, ...props }) {
       <group ref={groupRef} scale={[0, 0, 0]}>
         <group position={[-center.x, -center.y, -center.z]}>
           <primitive object={scene} />
-          <DiameterDimension box={box} />
+          {!props.hideDimensions && <DiameterDimension box={box} />}
         </group>
       </group>
     </group>
@@ -155,7 +155,7 @@ function Model({ url, ...props }) {
 // --- MAIN APP COMPONENT ---
 
 export default function App() {
-  const modelUrl = '/Cutting board.glb'
+  const modelUrl = '/cutting_board.glb'
   const arViewerRef = useRef(null)
   const [showQR, setShowQR] = useState(false)
   const [currentUrl, setCurrentUrl] = useState('')
@@ -165,9 +165,18 @@ export default function App() {
   }, [])
 
   const handleARClick = () => {
+    // Check for mobile
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-    if (!isMobile) { setShowQR(true); return }
-    if (arViewerRef.current) arViewerRef.current.activateAR()
+    
+    if (!isMobile) {
+      setShowQR(true)
+      return
+    }
+
+    // Trigger AR
+    if (arViewerRef.current) {
+      arViewerRef.current.activateAR()
+    }
   }
 
   return (
@@ -228,7 +237,7 @@ export default function App() {
             <directionalLight position={[5, 8, 5]} intensity={1.2} castShadow shadow-mapSize={[1024, 1024]} />
             <directionalLight position={[-3, 2, -2]} intensity={0.3} color="#ffeedd" />
             <Suspense fallback={<Loader />}>
-              <Model url={modelUrl} scale={4.55} position={[0, -0.2, 0]} />
+              <Model url={modelUrl} scale={4.55} position={[0, -0.2, 0]} hideDimensions={showQR} />
               <ContactShadows position={[0, -0.6, 0]} opacity={0.15} scale={10} blur={2.5} far={4} color="#000" />
               <Environment preset="apartment" environmentIntensity={0.6} />
             </Suspense>
@@ -313,6 +322,7 @@ export default function App() {
       {showQR && (
         <div className="qr-overlay" onClick={() => setShowQR(false)}>
           <div className="qr-card" onClick={e => e.stopPropagation()}>
+            <button className="qr-close" onClick={() => setShowQR(false)}>×</button>
             <h2>Scan for AR</h2>
             <p>Open your camera and scan the code to place this board on your kitchen counter!</p>
             <div className="qr-image-wrap">
@@ -329,10 +339,24 @@ export default function App() {
         </div>
       )}
 
-      {/* Hidden AR engine */}
-      <model-viewer ref={arViewerRef} src={modelUrl} ar ar-scale="fixed" ar-modes="scene-viewer webxr quick-look" style={{ display: 'none' }} />
+      {/* Hidden AR engine - optimized for cross-platform support */}
+      <model-viewer
+        ref={arViewerRef}
+        src={modelUrl}
+        ar
+        ar-modes="webxr scene-viewer quick-look"
+        ar-scale="fixed"
+        ar-placement="floor"
+        shadow-intensity="1"
+        environment-image="neutral"
+        loading="eager"
+        reveal="auto"
+        alt="A 3D model of a Bosch cutting board"
+        style={{ display: 'none' }}
+      >
+      </model-viewer>
     </div>
   )
 }
 
-useGLTF.preload('/Cutting board.glb')
+useGLTF.preload('/cutting_board.glb')
