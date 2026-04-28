@@ -155,7 +155,7 @@ function Model({ url, ...props }) {
 // --- MAIN APP COMPONENT ---
 
 export default function App() {
-  const modelUrl = '/cutting_board.glb'
+  const modelUrl = '/cutting_board_compressed.glb'
   const arViewerRef = useRef(null)
   const [showQR, setShowQR] = useState(false)
   const [currentUrl, setCurrentUrl] = useState('')
