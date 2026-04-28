@@ -155,7 +155,7 @@ function Model({ url, ...props }) {
 // --- MAIN APP COMPONENT ---
 
 export default function App() {
-  const modelUrl = '/chopping board 15inch.glb'
+  const modelUrl = '/cutting_board.glb'
   const arViewerRef = useRef(null)
   const [showQR, setShowQR] = useState(false)
   const [currentUrl, setCurrentUrl] = useState('')
