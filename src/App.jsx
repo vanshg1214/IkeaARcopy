@@ -155,13 +155,26 @@ function Model({ url, ...props }) {
 // --- MAIN APP COMPONENT ---
 
 export default function App() {
-  const modelUrl = '/cutting_board.glb'
+  const modelUrl = '/chopping board 15inch.glb'
   const arViewerRef = useRef(null)
   const [showQR, setShowQR] = useState(false)
   const [currentUrl, setCurrentUrl] = useState('')
 
   useEffect(() => {
     setCurrentUrl(window.location.href)
+    
+    // AR status logging
+    const viewer = arViewerRef.current
+    if (viewer) {
+      const handleStatus = (event) => {
+        console.log('AR Status:', event.detail.status)
+        if (event.detail.status === 'failed') {
+          console.error('AR Failed. Check if HTTPS is used and camera permissions are granted.')
+        }
+      }
+      viewer.addEventListener('ar-status', handleStatus)
+      return () => viewer.removeEventListener('ar-status', handleStatus)
+    }
   }, [])
 
   const handleARClick = () => {
@@ -344,15 +357,26 @@ export default function App() {
         ref={arViewerRef}
         src={modelUrl}
         ar
-        ar-modes="webxr scene-viewer quick-look"
-        ar-scale="fixed"
+        ar-modes="scene-viewer webxr quick-look"
+        ar-scale="auto"
         ar-placement="floor"
+        camera-controls
+        interaction-prompt="none"
         shadow-intensity="1"
         environment-image="neutral"
         loading="eager"
         reveal="auto"
         alt="A 3D model of a Bosch cutting board"
-        style={{ display: 'none' }}
+        style={{ 
+          position: 'fixed', 
+          top: 0,
+          left: 0,
+          width: '100vw', 
+          height: '100vh', 
+          opacity: 0.01, // Minimal opacity to ensure rendering
+          pointerEvents: 'none',
+          zIndex: -1
+        }}
       >
       </model-viewer>
     </div>
